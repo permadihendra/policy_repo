@@ -1,18 +1,9 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
-
-engine = create_engine("sqlite:///db/policy_repository.db")
-db_session = scoped_session(
-    sessionmaker(autocommit=False, autoflush=False, bind=engine)
-)
-Base = declarative_base()
-Base.query = db_session.query_property()
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
 
 
-def init_db():
-    # import all modules here that might define models so that
-    # they will be registered properly on the metadata.  Otherwise
-    # you will have to import them first before calling init_db()
-    import models
+class Base(DeclarativeBase):
+    pass
 
-    Base.metadata.create_all(bind=engine)
+
+db = SQLAlchemy(model_class=Base)

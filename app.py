@@ -6,7 +6,7 @@ from flask.helpers import redirect
 from pymupdf.mupdf import os
 from werkzeug.utils import secure_filename
 
-from db.database import db_session
+from db.database import db
 from models import Policy
 from utils.drive_uploader import upload_to_drive
 from utils.file_reader import extract_pdf_text
@@ -19,6 +19,11 @@ app = Flask(
     static_folder="static",
     template_folder="templates",
 )
+
+# configure the SQLite database, relative to the app instance folder
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///policy_repository.db"
+# initialize the app with the extension
+db.init_app(app)
 
 UPLOAD_FOLDER = "static/uploads"
 
@@ -51,8 +56,8 @@ def upload_pdf():
             uploaded_at=uploaded_at,
         )
 
-        db_session.add(data_input)
-        db_session.commit()
+        db.session.add(data_input)
+        db.session.commit()
 
         # Upload to Google Drive
         drive_id = upload_to_drive(save_path, filename)
@@ -62,15 +67,33 @@ def upload_pdf():
 
 @app.route("/policies", methods=["GET"])
 def get_policies():
-    data = Policy.query.all()
+    data = db.session.execute(
+        db.select(Policy).order_by(Policy.uploaded_at)
+    ).scalars()
 
     return render_template("index.html", policies=data)
 
 
-@app.route("/policy/<int:id>/delete", methods=["GET"])
+@app.route("/policy/<int:id>/delete", methods=["GET", "POST"])
 def delete_policy(id):
-    policy = Policy.query.first(id)
-    return jsonify(policy)
+    policy = db.get_or_404(Policy, id)
+
+    file_path = os.path.join(UPLOAD_FOLDER, policy.filename)
+
+    if request.method == "POST":
+        # execute delele file
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
+        else:
+            print(f"File not found: {file_path}")
+
+        # execute delete data on database
+        db.session.delete(policy)
+        db.session.commit()
+        return jsonify({"redirect_url": url_for("get_policies")})
+
+    return jsonify({"redirect_url": url_for("get_policies")})
 
 
 # temporary shutdown search for fast reloading

@@ -1,16 +1,16 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.orm import Mapped, mapped_column
 
-from db.database import Base
+from db.database import db
 
 
-class Policy(Base):
+class Policy(db.Model):
     __tablename__ = "policy_documents"
-    id = Column(Integer, primary_key=True)
-    title = Column(String(120), unique=True)
-    content = Column(LONGTEXT)
-    filename = Column(String(20))
-    uploaded_at = Column(String(20))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(unique=True)
+    content: Mapped[str]
+    filename: Mapped[str]
+    uploaded_at: Mapped[str]
 
     def __init__(self, title, content, filename, uploaded_at):
         self.title = title

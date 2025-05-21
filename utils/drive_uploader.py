@@ -3,7 +3,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
 # Load service account credentials
-SERVICE_ACCOUNT_FILE = "creadentials/rlegs-collectives-data-6d5ebc5bbd01.json"
+SERVICE_ACCOUNT_FILE = "credentials/rlegs-collectives-data-6d5ebc5bbd01.json"
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
 

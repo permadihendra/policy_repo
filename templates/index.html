@@ -98,14 +98,15 @@
                   </thead>
                   <tbody>
                     {% for policy in policies %}
-                    <tr>
+                    <tr id="policy-{{ policy.id }}">
                       <th scope="row">{{ policy.id }}</th>
                       <td>{{ policy.title }}</td>
-                      <td>{{ policy.title }}</td>
+                      <td>{{ policy.content[:300] }}</td>
                       <td>{{ policy.uploaded_at }}</td>
                        <td>
+
                            <a href="#">edit</a>
-                           <a href="#">delete</a>
+                           <a href="#" onclick="deletePolicy({{ policy.id }})">delete</a>
                        </td>
                     </tr>
                     {% endfor %}
@@ -150,7 +151,10 @@
                         method: "POST",
                         body: formData,
                     });
-                    alert((await res.json()).message);
+                    if (res.ok) {
+                      alert("Data has been uploaded.");
+                    }
+
                 });
 
             // Search handler
@@ -158,6 +162,27 @@
                 const query = document.getElementById("searchInput").value;
                 if (!query) return;
                 window.location.href = `/search?query=${encodeURIComponent(query)}`;
+            }
+
+            // Delete policy handler
+            async function deletePolicy(id) {
+              const confirmed = confirm("Are you sure you want to delete this policy?");
+              if (!confirmed) return;
+
+              const res = await fetch(`/policy/${id}/delete`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Requested-With": "XMLHttpRequest"
+                }
+              });
+
+              if (res.ok) {
+                const el = document.getElementById(`policy-${id}`);
+                if (el) el.remove();
+              } else {
+                alert("Failed to delete policy.");
+              }
             }
         </script>
     </body>
