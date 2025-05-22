@@ -5,7 +5,7 @@ import torch
 from sentence_transformers import SentenceTransformer, util
 from sqlalchemy.engine import result
 
-from db.database import db_session
+from db.database import db
 from models import Policy
 
 # Load lightweight LLM once
@@ -21,7 +21,7 @@ def split_sentences(text):
 
 
 def semantic_search(query, top_k=5):
-    rows = Policy.query.all()
+    rows = db.session.execute(db.select(Policy).order_by(Policy.id)).scalars()
 
     # Filter rows with valid content
     valid_rows = [r for r in rows if r.content]

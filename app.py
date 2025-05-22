@@ -13,8 +13,7 @@ from db.database import db
 from models import Policy
 from utils.drive_uploader import upload_to_drive
 from utils.file_reader import extract_pdf_text
-
-# from utils.search_engine import semantic_search
+from utils.search_engine import semantic_search
 
 app = Flask(
     __name__,
@@ -148,13 +147,13 @@ def delete_policy(id):
 
 
 # temporary shutdown search for fast reloading
-# @app.route("/search", methods=["GET"])
-# def search():
-#     query = request.args.get("query")
-#     if not query:
-#         return jsonify({"error": "Query required"}), 400
-#     results = semantic_search(query)
-#     return render_template("index.html", results=results)
+@app.route("/search", methods=["GET"])
+def search():
+    query = request.args.get("query")
+    if not query:
+        return jsonify({"error": "Query required"}), 400
+    results = semantic_search(query)
+    return render_template("index.html", results=results)
 
 
 if __name__ == "__main__":

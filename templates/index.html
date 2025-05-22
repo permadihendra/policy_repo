@@ -185,27 +185,33 @@
 
       {% endif %} {% if results %}
       <section id="list_policy">
-        <h3>Search Result Policies</h3>
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Title</th>
-              <th scope="col">Score</th>
-              <th scope="col">Excerpt</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for result in results %}
-            <tr>
-              <th scope="row">{{ result["id"] }}</th>
-              <td>{{ result["title"] }}</td>
-              <td>{{ result["score"] }}</td>
-              <td>{{ result["excerpt"] }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="card">
+          <div class="card-header">
+            <h3>Search Result Policies</h3>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Title</th>
+                  <th scope="col">Excerpt</th>
+                  <th scope="col">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for result in results %}
+                <tr>
+                  <th scope="row">{{ result["id"] }}</th>
+                  <td>{{ result["title"] }}</td>
+                  <td>{{ result["excerpt"] }}</td>
+                  <td>{{ result["score"] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
       {% endif %}
     </div>
@@ -241,11 +247,11 @@
       }
 
       // Search handler
-      // function searchPolicies() {
-      //     const query = document.getElementById("searchInput").value;
-      //     if (!query) return;
-      //     window.location.href = `/search?query=${encodeURIComponent(query)}`;
-      // }
+      function searchPolicies() {
+        const query = document.getElementById('searchInput').value
+        if (!query) return
+        window.location.href = `/search?query=${encodeURIComponent(query)}`
+      }
       function loadPage(page) {
         fetch(`/policies?page=${page}`, {
           headers: {
