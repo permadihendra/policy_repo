@@ -1,189 +1,314 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Policy Repository Admin</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-        />
-    </head>
-    <body>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">Policy Repository</a>
-                <div class="collapse navbar-collapse">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/"
-                                >Upload Policy</a
-                            >
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#search">Search</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-
-        <div class="container mt-4">
-            <!-- Upload Section -->
-            <section id="upload">
-                <h3>Upload Policy Document</h3>
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="policyTitle" class="form-label"
-                            >Select PDF or DOCX</label
-                        >
-                        <input
-                            class="form-control"
-                            type="text"
-                            id="policyTitle"
-                            name="title"
-                        />
-                    <div class="mb-3">
-                        <label for="policyFile" class="form-label"
-                            >Select PDF or DOCX</label
-                        >
-                        <input
-                            class="form-control"
-                            type="file"
-                            id="policyFile"
-                            name="policy"
-                        />
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        Upload
-                    </button>
-                </form>
-            </section>
-
-            <hr />
-
-            <!-- Search Section -->
-            <section id="search">
-                <h3>Search Policies</h3>
-                <div class="input-group mb-3">
-                    <input
-                        type="text"
-                        class="form-control"
-                        placeholder="Enter keyword..."
-                        id="searchInput"
-                    />
-                    <button
-                        class="btn btn-outline-secondary"
-                        type="button"
-                        onclick="searchPolicies()"
-                    >
-                        Search
-                    </button>
-                </div>
-                <ul class="list-group" id="searchResults"></ul>
-            </section>
-
-            {% if policies %}
-            <section id="list_policy">
-                <h3>List Policies</h3>
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Title</th>
-                      <th scope="col">Content</th>
-                      <th scope="col">uploaded_at</th>
-                      <th scope="col">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for policy in policies %}
-                    <tr id="policy-{{ policy.id }}">
-                      <th scope="row">{{ policy.id }}</th>
-                      <td>{{ policy.title }}</td>
-                      <td>{{ policy.content[:300] }}</td>
-                      <td>{{ policy.uploaded_at }}</td>
-                       <td>
-
-                           <a href="#">edit</a>
-                           <a href="#" onclick="deletePolicy({{ policy.id }})">delete</a>
-                       </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-            </section>
-            {% endif %}
-
-            {% if results %}
-            <section id="list_policy">
-                <h3>Search Result Policies</h3>
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Title</th>
-                      <th scope="col">Score</th>
-                      <th scope="col">Excerpt</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for result in results %}
-                    <tr>
-                      <th scope="row">{{ result["id"] }}</th>
-                      <td>{{ result["title"] }}</td>
-                      <td>{{ result["score"] }}</td>
-                      <td>{{ result["excerpt"] }}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-            </section>
-            {% endif %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Policy Repository Admin</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Policy Repository</a>
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" href="/">Upload Policy</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#search">Search</a>
+            </li>
+          </ul>
         </div>
+      </div>
+    </nav>
 
-        <script>
-            // Upload handler
-            document
-                .getElementById("uploadForm")
-                .addEventListener("submit", async function (e) {
-                    e.preventDefault();
-                    const formData = new FormData(this);
-                    const res = await fetch("/upload", {
-                        method: "POST",
-                        body: formData,
-                    });
-                    if (res.ok) {
-                      alert("Data has been uploaded.");
-                    }
+    <div class="container mt-4">
+      <!-- Upload Section -->
+      <section id="upload">
+        <div class="card">
+          <div class="card-header">
+            <h3>Upload Policy Document</h3>
+          </div>
+          <div class="card-body">
+            <form id="uploadForm" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label for="policyTitle" class="form-label">Input Title</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  id="policyTitle"
+                  name="title"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="policyFile" class="form-label"
+                  >Select PDF or DOCX</label
+                >
+                <input
+                  class="form-control"
+                  type="file"
+                  id="policyFile"
+                  name="policy"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+          </div>
+        </div>
+      </section>
 
-                });
+      <br />
 
-            // Search handler
-            function searchPolicies() {
-                const query = document.getElementById("searchInput").value;
-                if (!query) return;
-                window.location.href = `/search?query=${encodeURIComponent(query)}`;
+      <!-- Search Section -->
+      <div class="card">
+        <section id="search">
+          <div class="card-header">
+            <h3>Search Policies</h3>
+          </div>
+          <div class="card-body">
+            <div class="input-group mb-3">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Enter keyword..."
+                id="searchInput"
+              />
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                onclick="searchPolicies()"
+              >
+                Search
+              </button>
+            </div>
+            <ul class="list-group" id="searchResults"></ul>
+          </div>
+        </section>
+      </div>
+
+      <br />
+
+      {% if policies %}
+      <section id="list_policy">
+        <div class="card">
+          <div class="card-header">
+            <h3>List Policies</h3>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Title</th>
+                  <th scope="col">Content</th>
+                  <th scope="col">uploaded_at</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for policy in policies %}
+                <tr id="policy-{{ policy.id }}">
+                  <th scope="row">{{ policy.id }}</th>
+                  <td>{{ policy.title }}</td>
+                  <td>{{ policy.content[:300] }}</td>
+                  <td>{{ policy.uploaded_at }}</td>
+                  <td>
+                    <a href="#" onclick="deletePolicy('{{ policy.id }}')"
+                      >delete</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+
+              <div id="pagination">
+                <nav aria-label="Pagination">
+                  <ul class="pagination">
+                    {% if policies.has_prev %}
+                    <li class="page-item">
+                      <a
+                        class="page-link"
+                        href="#"
+                        onclick="loadPage('{{ policies.prev_num }}')"
+                        >Previous</a
+                      >
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                      <span class="page-link">Previous</span>
+                    </li>
+                    {% endif %} {% for page_num in
+                    policies.iter_pages(left_edge=1, right_edge=1,
+                    left_current=2, right_current=2) %} {% if page_num %} {% if
+                    page_num == policies.page %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                      <a
+                        class="page-link"
+                        href="#"
+                        onclick="loadPage('{{ page_num }}')"
+                        >{{ page_num }}</a
+                      >
+                    </li>
+                    {% endif %} {% else %}
+                    <li class="page-item disabled">
+                      <span class="page-link">…</span>
+                    </li>
+                    {% endif %} {% endfor %} {% if policies.has_next %}
+                    <li class="page-item">
+                      <a
+                        class="page-link"
+                        href="#"
+                        onclick="loadPage('{{ policies.next_num }}')"
+                        >Next</a
+                      >
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                      <span class="page-link">Next</span>
+                    </li>
+                    {% endif %}
+                  </ul>
+                </nav>
+              </div>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {% endif %} {% if results %}
+      <section id="list_policy">
+        <h3>Search Result Policies</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Title</th>
+              <th scope="col">Score</th>
+              <th scope="col">Excerpt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for result in results %}
+            <tr>
+              <th scope="row">{{ result["id"] }}</th>
+              <td>{{ result["title"] }}</td>
+              <td>{{ result["score"] }}</td>
+              <td>{{ result["excerpt"] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+    </div>
+
+    <script>
+      // Upload handler
+      document
+        .getElementById('uploadForm')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault()
+          const formData = new FormData(this)
+
+          try {
+            const res = await fetch('/upload', {
+              method: 'POST',
+              body: formData,
+            })
+            const result = await res.json()
+
+            if (!result.success) {
+              alert(result.error || 'Upload failed.')
+            } else {
+              alert('Upload successful!')
+              window.location.href = '/policies'
             }
+          } catch (err) {
+            alert('Unexpected error: ' + err.message)
+          }
+        })
+      // Pagination Handler
+      function loadPage(page) {
+        window.location.href = `/policies?page=${page}`
+      }
 
-            // Delete policy handler
-            async function deletePolicy(id) {
-              const confirmed = confirm("Are you sure you want to delete this policy?");
-              if (!confirmed) return;
+      // Search handler
+      // function searchPolicies() {
+      //     const query = document.getElementById("searchInput").value;
+      //     if (!query) return;
+      //     window.location.href = `/search?query=${encodeURIComponent(query)}`;
+      // }
+      function loadPage(page) {
+        fetch(`/policies?page=${page}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        })
+          .then((res) => res.text())
+          .then((html) => {
+            const parser = new DOMParser()
+            const doc = parser.parseFromString(html, 'text/html')
 
-              const res = await fetch(`/policy/${id}/delete`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-Requested-With": "XMLHttpRequest"
-                }
-              });
+            const newTable = doc.getElementById('list_policy')
+            const currentTable = document.getElementById('list_policy')
 
-              if (res.ok) {
-                const el = document.getElementById(`policy-${id}`);
-                if (el) el.remove();
-              } else {
-                alert("Failed to delete policy.");
-              }
+            if (newTable && currentTable) {
+              currentTable.innerHTML = newTable.innerHTML
+            } else {
+              alert('Table update failed.')
             }
-        </script>
-    </body>
+          })
+          .catch((err) => alert('Failed to load page: ' + err))
+      }
+
+      // Delete policy handler
+      async function deletePolicy(id) {
+        const confirmed = confirm(
+          'Are you sure you want to delete this policy?'
+        )
+        if (!confirmed) return
+
+        const res = await fetch(`/policy/${id}/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        })
+
+        if (res.ok) {
+          // After delete, re-fetch the current policy list and update DOM
+          const page =
+            new URLSearchParams(window.location.search).get('page') || 1
+
+          const htmlRes = await fetch(`/policies?page=${page}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          })
+          const html = await htmlRes.text()
+
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(html, 'text/html')
+
+          const newTable = doc.getElementById('list_policy')
+          const currentTable = document.getElementById('list_policy')
+
+          if (newTable && currentTable) {
+            currentTable.innerHTML = newTable.innerHTML
+          } else {
+            alert('Deleted, but failed to refresh the table.')
+          }
+        } else {
+          alert('Failed to delete policy.')
+        }
+      }
+    </script>
+  </body>
 </html>
