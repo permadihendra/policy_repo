@@ -39,7 +39,8 @@ def semantic_search(query, top_k=5):
     valid_rows = [r for r in rows if r.content]
 
     documents = [
-        f"TITLE: {r.title}. CONTENT: {clean_text(r.content[:2000])}"
+        f"TITLE: {r.title}. CONTENT: {clean_text(r.content)}"
+        # f"TITLE: {r.title}. CONTENT: {clean_text(r.content[:2000])}"
         for r in valid_rows
     ]
     titles = [r.title for r in valid_rows]
