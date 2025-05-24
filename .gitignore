@@ -8,7 +8,7 @@ wheels/
 
 # files
 static/uploads/*
-instance/
+instance
 
 # Virtual environments
 .venv
