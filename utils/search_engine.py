@@ -46,6 +46,16 @@ def split_sentences(text):
     return re.findall(r"[^.!?\n]+[.!?\n]", text.strip())
 
 
+# Query Search with some improvement
+# def query_search(query):
+#     query = query.strip()
+
+#     stmt = db.select(Policy).where(build_keyword_filter(query))
+#     results = db.session.execute(stmt).scalars().all()
+
+#     return results
+
+
 # SEMANTIC SEARCH with HYBRID Query SQL + LLM Matching Similarity
 def semantic_search(query, top_k=5):
     model = SemanticModel.get()

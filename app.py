@@ -14,6 +14,7 @@ from db.database import db
 from models import Policy
 from utils.drive_uploader import upload_to_drive
 from utils.file_reader import extract_pdf_text
+from utils.query_search import query_search
 
 app = Flask(
     __name__,
@@ -126,14 +127,17 @@ def upload_pdf():
 
 @app.route("/policies", methods=["GET"])
 def get_policies():
-    # data = db.session.execute(
-    #     db.select(Policy).order_by(Policy.uploaded_at)
-    # ).scalars()
-    data = db.paginate(
-        db.select(Policy).order_by(Policy.uploaded_at.desc()), per_page=10
-    )
+    query = request.args.get("query")
+    if query:
+        results = query_search(query)
 
-    return render_template("policies.html", policies=data)
+        return render_template("policies.html", results=results)
+    else:
+        data = db.paginate(
+            db.select(Policy).order_by(Policy.uploaded_at.desc()), per_page=10
+        )
+
+        return render_template("policies.html", policies=data)
 
 
 @app.route("/policy/<int:id>/delete", methods=["GET", "POST"])

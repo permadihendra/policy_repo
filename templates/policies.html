@@ -126,29 +126,39 @@
 <section id="list_policy">
   <div class="card">
     <div class="card-header">
-      <h3>Search Result Policies</h3>
+      <h3>Search Result</h3>
     </div>
     <div class="card-body">
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Title</th>
-            <th scope="col">Excerpt</th>
-            <th scope="col">Matched Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for result in results %}
-          <tr>
-            <th scope="row">{{ result["id"] }}</th>
-            <td>{{ result["title"] }}</td>
-            <td>{{ result["excerpt"] }}</td>
-            <td>{{ result["score"] }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Policy Date</th>
+              <th scope="col">Title</th>
+              <th scope="col">Number</th>
+              <th scope="col">Content</th>
+              <th scope="col">uploaded_at</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for result in results %}
+            <tr id="policy-{{ result.id }}">
+              <th scope="row">{{ result.id }}</th>
+              <td>{{ result.date }}</td>
+              <td>{{ result.title }}</td>
+              <td>{{ result.number }}</td>
+              <td>{{ result.content[:300] }}</td>
+              <td>{{ result.uploaded_at }}</td>
+              <td>
+                <a href="#" onclick="deletePolicy('{{ result.id }}')">delete</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </section>
@@ -179,6 +189,46 @@
       .catch((err) => alert('Failed to load page: ' + err))
   }
 
+  // Search handler
+  function searchPolicies() {
+    const query = document.getElementById('searchInput').value
+    if (!query) return
+    window.location.href = `/policies?query=${encodeURIComponent(query)}`
+  }
+  function loadPage(page) {
+    fetch(`/policies?page=${page}`, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+      .then((res) => res.text())
+      .then((html) => {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(html, 'text/html')
+
+        const newTable = doc.getElementById('list_policy')
+        const currentTable = document.getElementById('list_policy')
+
+        if (newTable && currentTable) {
+          currentTable.innerHTML = newTable.innerHTML
+        } else {
+          alert('Table update failed.')
+        }
+      })
+      .catch((err) => alert('Failed to load page: ' + err))
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document
+      .getElementById('searchInput')
+      .addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          searchPolicies()
+        }
+      })
+  })
+
+  // Delete Handler
   async function deletePolicy(id) {
     const confirmed = confirm('Are you sure you want to delete this policy?')
     if (!confirmed) return
