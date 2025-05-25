@@ -1,6 +1,6 @@
 import re
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, desc, func, or_
 
 from db.database import db
 from models import Policy
@@ -24,7 +24,12 @@ def build_keyword_filter(query):
 def query_search(query):
     query = query.strip()
 
-    stmt = db.select(Policy).where(build_keyword_filter(query))
+    stmt = (
+        db.select(Policy)
+        .where(build_keyword_filter(query))
+        .order_by(desc(Policy.date))
+        .limit(10)
+    )
     results = db.session.execute(stmt).scalars().all()
 
     return results
