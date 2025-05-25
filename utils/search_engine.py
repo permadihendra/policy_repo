@@ -1,16 +1,22 @@
+import os
 import re
 import sqlite3
 
 import torch
+
+# os.makedirs("cache", exist_ok=True)
+# os.environ["HF_HOME"] = os.path.abspath("cache")
+# os.environ["TORCH_HOME"] = os.path.abspath("cache")
 from sentence_transformers import SentenceTransformer, util
 from sqlalchemy.engine import result
 
 from db.database import db
 from models import Policy
+from semantic_model import SemanticModel
 
 # Load lightweight LLM once
 # model = SentenceTransformer("all-MiniLM-L6-v2")
-model = SentenceTransformer("distiluse-base-multilingual-cased-v1")
+# model = SentenceTransformer("distiluse-base-multilingual-cased-v1")
 
 
 def clean_text(text):
@@ -33,6 +39,8 @@ def split_sentences(text):
 
 
 def semantic_search(query, top_k=5):
+    model = SemanticModel.get()
+
     rows = db.session.execute(db.select(Policy).order_by(Policy.id)).scalars()
 
     # Filter rows with valid content

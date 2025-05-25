@@ -9,10 +9,11 @@ wheels/
 # files
 static/uploads/*
 instance
+cache
 
 # files
 *.db
-.DS_Store
+*.DS_Store
 
 # Virtual environments
 .venv

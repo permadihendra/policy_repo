@@ -1,0 +1,62 @@
+{% extends "base.html" %} {% block title %}
+<title>Upload Policy</title>
+{% endblock %} {% block content%}
+<section id="upload">
+  <div class="card">
+    <div class="card-header">
+      <h3>Upload Policy Document</h3>
+    </div>
+    <div class="card-body">
+      <form id="uploadForm" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="policyTitle" class="form-label">Input Title</label>
+          <input
+            class="form-control"
+            type="text"
+            id="policyTitle"
+            name="title"
+          />
+        </div>
+        <div class="mb-3">
+          <label for="policyFile" class="form-label">Select PDF or DOCX</label>
+          <input
+            class="form-control"
+            type="file"
+            id="policyFile"
+            name="policy"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Upload handler
+  document
+    .getElementById('uploadForm')
+    .addEventListener('submit', async function (e) {
+      e.preventDefault()
+      const formData = new FormData(this)
+
+      try {
+        const res = await fetch('/upload', {
+          method: 'POST',
+          body: formData,
+        })
+        const result = await res.json()
+
+        if (!result.success) {
+          alert(result.error || 'Upload failed.')
+        } else {
+          alert('Upload successful!')
+          window.location.href = '/policies'
+        }
+      } catch (err) {
+        alert('Unexpected error: ' + err.message)
+      }
+    })
+</script>
+
+{% endblock%}

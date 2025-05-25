@@ -13,7 +13,6 @@ from db.database import db
 from models import Policy
 from utils.drive_uploader import upload_to_drive
 from utils.file_reader import extract_pdf_text
-from utils.search_engine import semantic_search
 
 app = Flask(
     __name__,
@@ -37,79 +36,82 @@ def index():
     return redirect(url_for("get_policies"))
 
 
-@app.route("/upload", methods=["POST"])
+@app.route("/upload", methods=["GET", "POST"])
 def upload_pdf():
-    file = request.files["policy"]
-    title = request.form["title"]
+    if request.method == "GET":
+        return render_template("upload.html")
+    elif request.method == "POST":
+        file = request.files["policy"]
+        title = request.form["title"]
 
-    # Simple validation
-    if not title or not file:
-        return jsonify(
-            {"success": False, "error": "Title and file are required"}
-        ), 400
-
-    # Optional: check file type
-    if not file.filename.lower().endswith(".pdf"):
-        return jsonify(
-            {"success": False, "error": "Only PDF files are allowed"}
-        ), 400
-
-    if file.filename:
-        if not file or not file.filename.endswith(".pdf"):
-            return jsonify({"error": "Invalid file"}), 400
-
-        filename = secure_filename(file.filename)
-        save_path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(save_path)
-
-        # Extract text from PDF
-        text = extract_pdf_text(save_path)
-
-        # Clean the text
-        cleaned_text = clean(
-            text,
-            fix_unicode=True,
-            to_ascii=False,
-            lower=False,
-            no_line_breaks=True,
-            no_urls=True,
-            no_emails=True,
-            no_phone_numbers=True,
-            no_numbers=False,
-            no_digits=False,
-            no_currency_symbols=True,
-            no_punct=False,
-            replace_with_punct="",
-            replace_with_url="",
-            replace_with_email="",
-            replace_with_phone_number="",
-            replace_with_number="",
-            replace_with_digit="",
-            replace_with_currency_symbol="",
-        )
-
-        uploaded_at = datetime.utcnow().isoformat()
-
-        data_input = Policy(
-            title=title,
-            content=cleaned_text,
-            filename=filename,
-            uploaded_at=uploaded_at,
-        )
-        try:
-            db.session.add(data_input)
-            db.session.commit()
-            return jsonify(success=True), 200
-        except IntegrityError:
-            db.session.rollback()
+        # Simple validation
+        if not title or not file:
             return jsonify(
-                success=False, error="Policy title already exists"
-            ), 409
+                {"success": False, "error": "Title and file are required"}
+            ), 400
 
-        # Upload to Google Drive
-        drive_id = upload_to_drive(save_path, filename)
+        # Optional: check file type
+        if not file.filename.lower().endswith(".pdf"):
+            return jsonify(
+                {"success": False, "error": "Only PDF files are allowed"}
+            ), 400
 
-    return jsonify({"success": True})
+        if file.filename:
+            if not file or not file.filename.endswith(".pdf"):
+                return jsonify({"error": "Invalid file"}), 400
+
+            filename = secure_filename(file.filename)
+            save_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(save_path)
+
+            # Extract text from PDF
+            text = extract_pdf_text(save_path)
+
+            # Clean the text
+            cleaned_text = clean(
+                text,
+                fix_unicode=True,
+                to_ascii=False,
+                lower=False,
+                no_line_breaks=True,
+                no_urls=True,
+                no_emails=True,
+                no_phone_numbers=True,
+                no_numbers=False,
+                no_digits=False,
+                no_currency_symbols=True,
+                no_punct=False,
+                replace_with_punct="",
+                replace_with_url="",
+                replace_with_email="",
+                replace_with_phone_number="",
+                replace_with_number="",
+                replace_with_digit="",
+                replace_with_currency_symbol="",
+            )
+
+            uploaded_at = datetime.utcnow().isoformat()
+
+            data_input = Policy(
+                title=title,
+                content=cleaned_text,
+                filename=filename,
+                uploaded_at=uploaded_at,
+            )
+            try:
+                db.session.add(data_input)
+                db.session.commit()
+                return jsonify(success=True), 200
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify(
+                    success=False, error="Policy title already exists"
+                ), 409
+
+            # Upload to Google Drive
+            drive_id = upload_to_drive(save_path, filename)
+
+            return jsonify({"success": True})
 
 
 @app.route("/policies", methods=["GET"])
@@ -121,7 +123,7 @@ def get_policies():
         db.select(Policy).order_by(Policy.uploaded_at.desc()), per_page=10
     )
 
-    return render_template("index.html", policies=data)
+    return render_template("policies.html", policies=data)
 
 
 @app.route("/policy/<int:id>/delete", methods=["GET", "POST"])
@@ -146,14 +148,18 @@ def delete_policy(id):
     return jsonify({"redirect_url": url_for("get_policies")})
 
 
-# temporary shutdown search for fast reloading
-@app.route("/search", methods=["GET"])
-def search():
+@app.route("/contextual-search", methods=["GET"])
+def contextual_search():
     query = request.args.get("query")
-    if not query:
-        return jsonify({"error": "Query required"}), 400
-    results = semantic_search(query)
-    return render_template("index.html", results=results)
+    if query:
+        from utils.search_engine import semantic_search
+
+        if not query:
+            return jsonify({"error": "Query required"}), 400
+        results = semantic_search(query)
+        return render_template("contextual_search.html", results=results)
+    else:
+        return render_template("contextual_search.html")
 
 
 if __name__ == "__main__":

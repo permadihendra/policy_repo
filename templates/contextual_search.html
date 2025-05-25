@@ -1,0 +1,108 @@
+{% extends "base.html" %} {% block title %}
+<title>Contextual Search</title>
+{% endblock %} {% block content%}
+<!-- Search Section -->
+
+<section id="search">
+  <div class="card">
+    <div class="card-header">
+      <h3>Contextual Search</h3>
+    </div>
+    <div class="card-body">
+      <div class="input-group mb-3">
+        <input
+          type="textarea"
+          class="form-control"
+          placeholder="Enter keyword..."
+          id="searchInput"
+        />
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          onclick="searchPolicies()"
+        >
+          Search
+        </button>
+      </div>
+      <ul class="list-group" id="searchResults"></ul>
+    </div>
+  </div>
+</section>
+
+<br />
+
+{% if results %}
+<section id="list_policy">
+  <div class="card">
+    <div class="card-header">
+      <h3>Search Result Policies</h3>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Title</th>
+            <th scope="col">Excerpt</th>
+            <th scope="col">Matched Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for result in results %}
+          <tr>
+            <th scope="row">{{ result["id"] }}</th>
+            <td>{{ result["title"] }}</td>
+            <td>{{ result["excerpt"] }}</td>
+            <td>{{ result["score"] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+{% endif %}
+
+<script>
+  // Search handler
+  function searchPolicies() {
+    const query = document.getElementById('searchInput').value
+    if (!query) return
+    window.location.href = `/contextual-search?query=${encodeURIComponent(query)}`
+  }
+  function loadPage(page) {
+    fetch(`/contextual-search?page=${page}`, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+      .then((res) => res.text())
+      .then((html) => {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(html, 'text/html')
+
+        const newTable = doc.getElementById('list_policy')
+        const currentTable = document.getElementById('list_policy')
+
+        if (newTable && currentTable) {
+          currentTable.innerHTML = newTable.innerHTML
+        } else {
+          alert('Table update failed.')
+        }
+      })
+      .catch((err) => alert('Failed to load page: ' + err))
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document
+      .getElementById('searchInput')
+      .addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          searchPolicies()
+        }
+      })
+  })
+</script>
+
+{% endblock %}
