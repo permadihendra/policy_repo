@@ -11,22 +11,20 @@ class Policy(db.Model):
     content: Mapped[str]
     filename: Mapped[str]
     uploaded_at: Mapped[str]
+    number: Mapped[str] = mapped_column(
+        String(100), nullable=True
+    )  # New added later
+    date: Mapped[str] = mapped_column(
+        String(20), nullable=True
+    )  # New added later
 
-    def __init__(self, title, content, filename, uploaded_at):
+    def __init__(self, title, content, filename, uploaded_at, number, date):
         self.title = title
         self.content = content
         self.filename = filename
         self.uploaded_at = uploaded_at
+        self.number = number  # New added later
+        self.date = date  # New added later
 
     def __repr__(self):
         return f"<Policy {self.title!r}>"
-
-
-# "policy_documents",
-# {
-#     "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-#     "title": "TEXT",
-#     "content": "TEXT",
-#     "filename": "TEXT",
-#     "uploaded_at": "TEXT",
-# },

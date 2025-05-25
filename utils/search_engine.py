@@ -46,13 +46,14 @@ def split_sentences(text):
     return re.findall(r"[^.!?\n]+[.!?\n]", text.strip())
 
 
+# SEMANTIC SEARCH with HYBRID Query SQL + LLM Matching Similarity
 def semantic_search(query, top_k=5):
     model = SemanticModel.get()
     query = query.strip()
 
     # Determine if keyword-style query
     is_keyword_like = (
-        len(query.split()) <= 2
+        len(query.split()) <= 3
         or re.search(r"\d{4}", query)
         or re.search(r"\d", query)
     )

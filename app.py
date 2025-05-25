@@ -4,6 +4,7 @@ from datetime import datetime
 from cleantext import clean
 from flask import Flask, flash, jsonify, render_template, request, url_for
 from flask.helpers import redirect
+from flask_migrate import Migrate
 from httplib2 import Response
 from pymupdf.mupdf import os
 from sqlalchemy.exc import IntegrityError
@@ -27,6 +28,7 @@ app.secret_key = "KMZWA8AWAA"  # ← required for flash, session, CSRF
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///policy_repository.db"
 # initialize the app with the extension
 db.init_app(app)
+migrate = Migrate(app, db)
 
 UPLOAD_FOLDER = "static/uploads"
 
