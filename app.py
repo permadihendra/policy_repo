@@ -2,7 +2,15 @@ import sqlite3
 from datetime import datetime
 
 from cleantext import clean
-from flask import Flask, flash, jsonify, render_template, request, url_for
+from flask import (
+    Flask,
+    flash,
+    jsonify,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask.helpers import redirect
 from flask_migrate import Migrate
 from httplib2 import Response
@@ -138,6 +146,20 @@ def get_policies():
         )
 
         return render_template("policies.html", policies=data)
+
+
+# View pdf
+@app.route("/uploads/<filename>")
+def serve_pdf(filename):
+    return send_from_directory("static/uploads", secure_filename(filename))
+
+
+# View Detail Policies + PDF View
+@app.route("/policy/<int:id>/view", methods=["GET"])
+def view_policy(id):
+    policy = db.get_or_404(Policy, id)
+
+    return render_template("policy_view.html", policy=policy)
 
 
 @app.route("/policy/<int:id>/delete", methods=["GET", "POST"])

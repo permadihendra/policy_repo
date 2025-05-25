@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.database import db
@@ -8,7 +8,7 @@ class Policy(db.Model):
     __tablename__ = "policy_documents"
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(unique=True)
-    content: Mapped[str]
+    content: Mapped[str] = mapped_column(Text)  # new added
     filename: Mapped[str]
     uploaded_at: Mapped[str]
     number: Mapped[str] = mapped_column(

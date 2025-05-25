@@ -56,7 +56,10 @@
             <tr id="policy-{{ policy.id }}">
               <th scope="row">{{ policy.id }}</th>
               <td>{{ policy.date }}</td>
-              <td>{{ policy.title }}</td>
+              <td>
+                <a href="/policy/{{ policy.id }}/view">{{ policy.title }}</a>
+                <!-- <a href="/uploads/{{ policy.filename }}">{{ policy.title }}</a> -->
+              </td>
               <td>{{ policy.number }}</td>
               <td>{{ policy.content[:300] }}</td>
               <td>{{ policy.uploaded_at }}</td>
