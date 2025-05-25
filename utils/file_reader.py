@@ -1,10 +1,9 @@
-import pymupdf
-
-
 def extract_pdf_text(file_path):
-    doc = pymupdf.open(file_path)
-    text = ""
+    import fitz
+
+    doc = fitz.open(file_path)
+    chunks = []
     for page in doc:
-        text = page.get_text().encode("utf8")  # get plain text (is in UTF-8)
+        chunks.append(page.get_text())
     doc.close()
-    return text
+    return "".join(chunks)
