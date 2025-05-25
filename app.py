@@ -45,11 +45,16 @@ def upload_pdf():
     elif request.method == "POST":
         file = request.files["policy"]
         title = request.form["title"]
+        number = request.form["number"]
+        date = request.form["date"]
 
         # Simple validation
-        if not title or not file:
+        if not title or not file or not date:
             return jsonify(
-                {"success": False, "error": "Title and file are required"}
+                {
+                    "success": False,
+                    "error": "Title, date, and file are required",
+                }
             ), 400
 
         # Optional: check file type
@@ -92,6 +97,7 @@ def upload_pdf():
                 replace_with_currency_symbol="",
             )
 
+            # Formatting date
             uploaded_at = datetime.utcnow().isoformat()
 
             data_input = Policy(
@@ -99,6 +105,8 @@ def upload_pdf():
                 content=cleaned_text,
                 filename=filename,
                 uploaded_at=uploaded_at,
+                number=number,
+                date=datetime.strptime(date, "%Y-%m-%d").date().isoformat(),
             )
             try:
                 db.session.add(data_input)

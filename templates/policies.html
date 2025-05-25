@@ -43,7 +43,9 @@
           <thead>
             <tr>
               <th scope="col">#</th>
+              <th scope="col">Policy Date</th>
               <th scope="col">Title</th>
+              <th scope="col">Number</th>
               <th scope="col">Content</th>
               <th scope="col">uploaded_at</th>
               <th scope="col">Actions</th>
@@ -53,7 +55,9 @@
             {% for policy in policies %}
             <tr id="policy-{{ policy.id }}">
               <th scope="row">{{ policy.id }}</th>
+              <td>{{ policy.date }}</td>
               <td>{{ policy.title }}</td>
+              <td>{{ policy.number }}</td>
               <td>{{ policy.content[:300] }}</td>
               <td>{{ policy.uploaded_at }}</td>
               <td>

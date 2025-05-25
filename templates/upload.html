@@ -8,23 +8,57 @@
     </div>
     <div class="card-body">
       <form id="uploadForm" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label for="policyTitle" class="form-label">Input Title</label>
-          <input
-            class="form-control"
-            type="text"
-            id="policyTitle"
-            name="title"
-          />
+        <div class="mb-3 row">
+          <label for="policyTitle" class="col-sm-2 col-form-label"
+            >Policy Title</label
+          >
+          <div class="col-sm-10">
+            <input
+              class="form-control"
+              type="text"
+              id="policyTitle"
+              name="title"
+            />
+          </div>
         </div>
-        <div class="mb-3">
-          <label for="policyFile" class="form-label">Select PDF or DOCX</label>
-          <input
-            class="form-control"
-            type="file"
-            id="policyFile"
-            name="policy"
-          />
+        <div class="mb-3 row">
+          <label for="policyNumber" class="col-sm-2 col-form-label"
+            >Policy Number</label
+          >
+          <div class="col-sm-10">
+            <input
+              class="form-control"
+              type="text"
+              id="policyNumber"
+              name="number"
+            />
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="policyDate" class="col-sm-2 col-form-label"
+            >Policy Date</label
+          >
+          <div class="col-sm-2">
+            <input
+              class="form-control"
+              type="date"
+              id="policyDate"
+              name="date"
+            />
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="policyFile" class="col-sm-2 col-form-label"
+            >Select PDF</label
+          >
+          <div class="col-sm-10">
+            <input
+              class="form-control"
+              type="file"
+              id="policyFile"
+              name="policy"
+            />
+          </div>
         </div>
         <button type="submit" class="btn btn-primary">Upload</button>
       </form>
