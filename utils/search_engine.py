@@ -3,20 +3,13 @@ import re
 import sqlite3
 
 import torch
-
-# os.makedirs("cache", exist_ok=True)
-# os.environ["HF_HOME"] = os.path.abspath("cache")
-# os.environ["TORCH_HOME"] = os.path.abspath("cache")
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import util
+from sqlalchemy import and_, func, or_
 from sqlalchemy.engine import result
 
 from db.database import db
 from models import Policy
 from semantic_model import SemanticModel
-
-# Load lightweight LLM once
-# model = SentenceTransformer("all-MiniLM-L6-v2")
-# model = SentenceTransformer("distiluse-base-multilingual-cased-v1")
 
 
 def clean_text(text):
@@ -31,6 +24,21 @@ def clean_text(text):
     return text
 
 
+def build_keyword_filter(query):
+    words = [
+        word.strip().lower()
+        for word in re.findall(r"\w+", query)
+        if len(word.strip()) > 1
+    ]
+
+    # Combine title + content as one virtual field
+    combined_field = func.concat(Policy.title, " ", Policy.content)
+
+    conditions = [combined_field.ilike(f"%{word}%") for word in words]
+
+    return and_(*conditions) if conditions else True
+
+
 def split_sentences(text):
     if isinstance(text, bytes):
         text = text.decode("utf-8", errors="ignore")
@@ -40,45 +48,63 @@ def split_sentences(text):
 
 def semantic_search(query, top_k=5):
     model = SemanticModel.get()
+    query = query.strip()
 
-    rows = db.session.execute(db.select(Policy).order_by(Policy.id)).scalars()
+    # Determine if keyword-style query
+    is_keyword_like = (
+        len(query.split()) <= 2
+        or re.search(r"\d{4}", query)
+        or re.search(r"\d", query)
+    )
 
-    # Filter rows with valid content
-    valid_rows = [r for r in rows if r.content]
+    # SQL keyword-based match
+    stmt = db.select(Policy).where(build_keyword_filter(query))
+    sql_rows = db.session.execute(stmt).scalars().all()
+    sql_ids = {r.id for r in sql_rows}
 
-    documents = [
-        f"TITLE: {r.title}. CONTENT: {clean_text(r.content)}"
-        # f"TITLE: {r.title}. CONTENT: {clean_text(r.content[:2000])}"
-        for r in valid_rows
-    ]
+    # Return SQL-only for keyword-like queries
+    if is_keyword_like:
+        return [
+            {
+                "id": r.id,
+                "title": r.title,
+                "score": 1.0,
+                "excerpt": r.content[:300],
+            }
+            for r in sql_rows[:top_k]
+        ]
+
+    # Semantic search fallback
+    all_rows = db.session.execute(
+        db.select(Policy).order_by(Policy.id)
+    ).scalars()
+    valid_rows = [r for r in all_rows if r.content]
+
+    if not valid_rows:
+        return []
+
     titles = [r.title for r in valid_rows]
+    contents = [clean_text(r.content) for r in valid_rows]
     ids = [r.id for r in valid_rows]
 
-    if not documents:
-        return []  # avoid embedding empty list
-
-    # Encode
-    query_emb = model.encode(query, convert_to_tensor=True)
-
-    # doc_embs = model.encode(documents, convert_to_tensor=True)
-    # Blend title/content embeddings with 70/30 weighting
+    # Blend embeddings
     doc_embs = []
-    for title, content in zip(titles, documents):
+    for title, content in zip(titles, contents):
         title_emb = model.encode(title, convert_to_tensor=True)
         content_emb = model.encode(content, convert_to_tensor=True)
         blended_emb = 0.7 * title_emb + 0.3 * content_emb
         doc_embs.append(blended_emb)
 
     doc_embs = torch.stack(doc_embs)
+    query_emb = model.encode(query, convert_to_tensor=True)
 
-    # Similarity
     scores = util.pytorch_cos_sim(query_emb, doc_embs)[0]
-    top_results = scores.topk(min(top_k, len(documents)))
+    top_results = scores.topk(min(top_k, len(valid_rows)))
 
     results = []
     for score, idx in zip(top_results[0], top_results[1]):
         i = int(idx)
-        full_text = clean_text(documents[i])
+        full_text = contents[i]
         sentences = split_sentences(full_text)
 
         if not sentences or float(score) < 0.4:
@@ -86,20 +112,27 @@ def semantic_search(query, top_k=5):
         else:
             sent_embs = model.encode(sentences, convert_to_tensor=True)
             sent_scores = util.pytorch_cos_sim(query_emb, sent_embs)[0]
-            top_n = min(10, len(sentences))  # Return 10 Sentence
+            top_n = min(10, len(sentences))
             top_idxs = torch.topk(sent_scores, k=top_n).indices.tolist()
-            top_idxs.sort()  # Keep natural flow of sentences
+            top_idxs.sort()
             top_sentences = [sentences[j] for j in top_idxs]
             excerpt = " ".join(top_sentences)
 
-        bonus = 0.1 if query.lower() in full_text.lower() else 0
+        result_score = float(score)
+
+        # Hybrid score bonus
+        if ids[i] in sql_ids:
+            result_score += 0.1
+        if query.lower() in full_text.lower():
+            result_score += 0.1
+
         results.append(
             {
                 "id": ids[i],
                 "title": titles[i],
-                "score": round(float(score) + bonus, 4),
+                "score": round(result_score, 4),
                 "excerpt": excerpt,
             }
         )
 
-    return results
+    return sorted(results, key=lambda x: x["score"], reverse=True)
